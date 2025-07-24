@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tela de Cadastro" />
+    <link rel="stylesheet" href="/static/css/painelGestor.css">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <title>Portal do Gestor</title>
+</head>
+
+<body>
+
+    <header class="header-painel">
+        <div class="info-usuario">
+            <span class="greeting">Olá, <strong id="nome-usuario">Carregando...</strong></span>
+            <span class="separador">|</span>
+            <a href="#" id="logout-link" class="logout-link">Sair</a>
+        </div>
+    </header>
+
+    <section id="sectionGestor" class="section-gestor">
+
+        <header class="cabecalho-section">
+            <h1>Portal do Gestor</h1>
+        </header>
+
+        <div class="cartao-gestor">
+            <div class="container-filtros">
+
+                <div class="item-filtro">
+                    <label for="filtro-ceu">Filtrar por Casa (CEU)</label>
+                    <select id="filtro-ceu" class="filtro-select">
+                        <option value="">Todas as Casas</option>
+                    </select>
+                </div>
+
+                <div class="item-filtro">
+                    <label for="filtro-categoria">Filtrar por Categoria</label>
+                    <select id="filtro-categoria" class="filtro-select">
+                        <option value="">Todas as Categorias</option>
+                    </select>
+                </div>
+
+                <div class="item-filtro">
+                    <label for="filtro-status">Filtrar por Status</label>
+                    <select id="filtro-status" class="filtro-select">
+                        <option value="">Todos os Status</option>
+                        <option value="Aberto">Aberto</option>
+                        <option value="Em analise">Em análise</option>
+                        <option value="Aguardando execução">Aguardando execução</option>
+                        <option value="Aguardando peça">Aguardando peça</option>
+                        <option value="Concluído">Concluído</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="item-filtro">
+                    <label for="filtro-ordenar-por">Ordenar por</label>
+                    <select id="filtro-ordenar-por" class="filtro-select">
+                        <option value="recentes">Mais Recentes</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+
+                </div>
+
+            <button type="button" id="btn-aplicar-filtro" class="btn-atualizar-pedido">
+                Aplicar Filtro
+            </button>
+        </div>
+
+        <!-- LISTA DE PEDIDOS DOS MORADORES (CARD) -->
+        <div id="lista-pedidos-gestor">
+            <p>Carregando pedidos...</p>
+        </div>
+
+    </section>
+
+    <script>
+        let userData = null;
+        let todosPedidos = [];
+        let filtrosDisponiveis = {};
+
+        // Verificar sessão ao carregar a página
+        async function verificarSessao() {
+            try {
+                const response = await fetch('/api/auth/check-session');
+                const data = await response.json();
+                
+                if (!data.authenticated || !data.user.is_gestor) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                userData = data.user;
+                document.getElementById('nome-usuario').textContent = userData.username;
+                
+                // Carregar pedidos
+                carregarPedidos();
+            } catch (error) {
+                console.error('Erro ao verificar sessão:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // Carregar pedidos do gestor
+        async function carregarPedidos() {
+            try {
+                // Obter valores dos filtros
+                const filtros = obterFiltros();
+                const queryParams = new URLSearchParams(filtros).toString();
+                
+                const response = await fetch(`/api/pedidos/gestor?${queryParams}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    todosPedidos = data.pedidos;
+                    filtrosDisponiveis = data.filtros;
+                    
+                    // Preencher dropdowns de filtro
+                    preencherFiltros();
+                    
+                    // Renderizar pedidos
+                    renderizarPedidos(todosPedidos);
+                } else {
+                    document.getElementById('lista-pedidos-gestor').innerHTML = '<p class="text_sem-pedidos">Erro ao carregar pedidos.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar pedidos:', error);
+                document.getElementById('lista-pedidos-gestor').innerHTML = '<p class="text_sem-pedidos">Erro ao carregar pedidos.</p>';
+            }
+        }
+
+        // Obter valores dos filtros
+        function obterFiltros() {
+            return {
+                casa: document.getElementById('filtro-ceu').value,
+                categoria: document.getElementById('filtro-categoria').value,
+                status: document.getElementById('filtro-status').value,
+                ordenar_por: document.getElementById('filtro-ordenar-por').value
+            };
+        }
+
+        // Preencher dropdowns de filtro
+        function preencherFiltros() {
+            // Preencher casas
+            const selectCasa = document.getElementById('filtro-ceu');
+            selectCasa.innerHTML = '<option value="">Todas as Casas</option>';
+            filtrosDisponiveis.casas_disponiveis.forEach(casa => {
+                const option = document.createElement('option');
+                option.value = casa;
+                option.textContent = `CEU ${casa}`;
+                if (casa === filtrosDisponiveis.filtro_casa) option.selected = true;
+                selectCasa.appendChild(option);
+            });
+
+            // Preencher categorias
+            const selectCategoria = document.getElementById('filtro-categoria');
+            selectCategoria.innerHTML = '<option value="">Todas as Categorias</option>';
+            filtrosDisponiveis.categorias_disponiveis.forEach(categoria => {
+                const option = document.createElement('option');
+                option.value = categoria;
+                option.textContent = categoria;
+                if (categoria === filtrosDisponiveis.filtro_categoria) option.selected = true;
+                selectCategoria.appendChild(option);
+            });
+
+            // Definir valores selecionados
+            document.getElementById('filtro-status').value = filtrosDisponiveis.filtro_status || '';
+            document.getElementById('filtro-ordenar-por').value = filtrosDisponiveis.ordenar_por || 'recentes';
+        }
+
+        // Renderizar lista de pedidos
+        function renderizarPedidos(pedidos) {
+            const container = document.getElementById('lista-pedidos-gestor');
+            
+            if (pedidos.length === 0) {
+                container.innerHTML = '<div id="text_semPedidos" class="text_sem-pedidos"><p>Nenhum pedido encontrado.</p></div>';
+                return;
+            }
+            
+            const statusClasses = {
+                'Aberto': 'status-aberto',
+                'Em analise': 'status-em-analise',
+                'Aguardando execução': 'status-aguardando-execucao',
+                'Aguardando peça': 'status-aguardando-peca',
+                'Concluído': 'status-concluido',
+                'Cancelado': 'status-cancelado'
+            };
+            
+            container.innerHTML = pedidos.map(pedido => `
+                <div class="pedidos-gestor">
+
+                    <div class="pedido-categoria-tag">
+                        <span class="pedido-categoria-texto">${pedido.categoria}</span>
+                    </div>
+
+                    <p class="pedido-descricao-texto">${pedido.descricao}</p>
+
+                    <div class="pedido-local-container">
+                        <p class="pedido-local-texto">Local: ${pedido.local}</p>
+                        <p class="pedido-local-detalhes">
+                            <span>${pedido.casa ? ` • Casa: ${pedido.casa}` : ''}</span>
+                            <span>${pedido.quarto ? ` • Quarto: ${pedido.quarto}` : ''}</span>
+                            <span>${pedido.ala ? ` • Ala: ${pedido.ala}` : ''}</span>
+                        </p>
+                    </div>
+
+                    <div class="separador-bottom"></div>
+
+                    <div class="container-metadados">
+                        <p>Criado em: ${pedido.data_criacao}</p>
+                        <p>Morador: ${pedido.nome_morador}</p>
+                        <p>ID: ${pedido.id}</p>
+                    </div>
+
+                    <div class="separador-top"></div>
+                    
+                    <div style="display: none;" class="container-imagem">
+                        <img class="imagem-pedido" src="" alt="Foto do problema">
+                    </div>
+
+                    <div class="pedido-comentarios">
+                        <p class="comentario-titulo">Histórico de Comentários:</p>
+                        <div class="comentario-conteudo">
+                            ${pedido.comentario_gestor ? 
+                                pedido.comentario_gestor.split('\n').filter(c => c.trim()).map(c => `<p>${c}</p>`).join('') :
+                                '<p>Nenhum comentário ainda.</p>'
+                            }
+                        </div>
+                    </div>
+
+                    <div class="container-atualizar-pedido">
+                        <form onsubmit="atualizarPedido(event, ${pedido.id})">
+                            <div class="secao-interacao-pedido">
+
+                                <div class="container-comentarios">
+                                    <label class="label-pedidos">Adicionar Comentário</label>
+                                    <textarea class="textarea-comentario" rows="1" placeholder="Adicionar novo comentário" name="comentario"></textarea>
+                                </div>
+
+                                
+                                <div class="container-selects">
+                                    <label class="label-pedidos">Status</label>
+                                    <select class="select-status" name="status">
+                                        <option value="Aberto" ${pedido.status === 'Aberto' ? 'selected' : ''}>Aberto</option>
+                                        <option value="Em analise" ${pedido.status === 'Em analise' ? 'selected' : ''}>Em análise</option>
+                                        <option value="Aguardando execução" ${pedido.status === 'Aguardando execução' ? 'selected' : ''}>Aguardando execução</option>
+                                        <option value="Aguardando peça" ${pedido.status === 'Aguardando peça' ? 'selected' : ''}>Aguardando peça</option>
+                                        <option value="Concluído" ${pedido.status === 'Concluído' ? 'selected' : ''}>Concluído</option>
+                                        <option value="Cancelado" ${pedido.status === 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                                    </select>
+                                    
+                                </div>
+
+                                <div class="container-tag-status">
+                                    <span class="tag-status ${statusClasses[pedido.status] || 'status-aberto'}">${pedido.status}</span>
+                                </div>
+
+                            </div>
+
+                            <button type="submit" class="btn-atualizar-pedido">
+                                Atualizar Pedido
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            `).join('');
+        }
+
+        // Atualizar pedido
+        async function atualizarPedido(event, pedidoId) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const dados = {
+                pedido_id: pedidoId,
+                status: formData.get('status'),
+                comentario: formData.get('comentario')
+            };
+            
+            try {
+                const response = await fetch('/api/pedidos/atualizar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dados)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Limpar textarea de comentário
+                    form.querySelector('textarea[name="comentario"]').value = '';
+                                       // Recarregar pedidos
+                    carregarPedidos();
+                } else {
+                    alert('Erro ao atualizar pedido: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar pedido:', error);
+                alert('Erro ao atualizar pedido. Tente novamente.');
+            }
+        }
+
+        // Event listener para aplicar filtros
+        document.getElementById('btn-aplicar-filtro').addEventListener('click', function() {
+            carregarPedidos();
+        });
+
+        // Event listeners para filtros automáticos
+        document.getElementById('filtro-ceu').addEventListener('change', carregarPedidos);
+        document.getElementById('filtro-categoria').addEventListener('change', carregarPedidos);
+        document.getElementById('filtro-status').addEventListener('change', carregarPedidos);
+        document.getElementById('filtro-ordenar-por').addEventListener('change', carregarPedidos);
+
+        // Logout
+        document.getElementById('logout-link').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+                window.location.href = '/';
+            }
+        });
+
+        // Inicializar página
+        verificarSessao();
+    </script>
+
+</body>
+
+</html>

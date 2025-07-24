@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Login</title>
+    <meta name="description" content="Tela de Login"/>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="cartao-login">
+            
+            <div class="cabecalho-login">
+                <h1>Bem-vindo de volta</h1>
+                <p>Entre com suas credenciais para acessar sua conta</p>
+
+                <div id="mensagens-container" style="display: none;">
+                    <ul class="ul-flashed-messages">
+                        <li class="mensagem-validacao" id="mensagem-erro"></li>
+                    </ul>
+                </div>
+            </div>
+
+
+            <form id="loginFormulario" class="login-formulario" autocomplete="off">
+                <div class="item-formulario">
+                    <label for="usuario">Nome de usuário</label>
+                    <input type="text" id="usuario" name="usuario" placeholder="Digite o seu nome de usuário" required>
+                </div>  
+
+                <div class="item-formulario">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
+                </div>  
+
+                <button type="submit" class="btn">
+                    Entrar
+                </button>
+
+            </form>
+
+            <div class="divider">
+                <span>ou</span>
+            </div>
+
+            <button type="button" class="btn btn-criarConta" id="criarConta">
+                <a href="/cadastro" class="link-criarConta">Criar conta</a>
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginFormulario').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const usuario = document.getElementById('usuario').value;
+            const senha = document.getElementById('senha').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        usuario: usuario,
+                        senha: senha
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.user.is_gestor) {
+                        window.location.href = '/painel-gestor';
+                    } else {
+                        window.location.href = '/painel-morador';
+                    }
+                } else {
+                    document.getElementById('mensagem-erro').textContent = data.message;
+                    document.getElementById('mensagens-container').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('mensagem-erro').textContent = 'Erro ao fazer login. Tente novamente.';
+                document.getElementById('mensagens-container').style.display = 'block';
+            }
+        });
+    </script>
+
+</body>
+</html>
