@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, session, redirect, url_for
-from src.utils.validacoes import verifica_gestor
+from flask import Blueprint, render_template
+from src.utils.auth_decorators import token_required
 
 pages_bp = Blueprint('pages', __name__)
 
@@ -11,19 +11,18 @@ def index():
 def cadastro():
     return render_template('cadastro.html')
 
-@pages_bp.route('/painel-morador')
+@pages_bp.route("/painel-morador")
+@token_required
 def painel_morador():
-    if 'user_id' not in session:
-        return redirect('/unauthorized')
-    return render_template('painelMorador.html')
+    # As informações do usuário autenticado estarão em request.user
+    return render_template("painelMorador.html")
 
-@pages_bp.route('/painel-gestor')
+@pages_bp.route("/painel-gestor")
+@token_required
 def painel_gestor():
-    if 'user_id' not in session:
-        return redirect('/unauthorized')
-    return render_template('painelGestor.html')
+    # As informações do usuário autenticado estarão em request.user
+    return render_template("painelGestor.html")
 
-@pages_bp.route('/unauthorized')
+@pages_bp.route("/unauthorized")
 def unauthorized():
-    return render_template('unauthorized.html')
-
+    return render_template("unauthorized.html")
