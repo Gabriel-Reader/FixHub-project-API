@@ -12,13 +12,11 @@ def cadastro():
     return render_template('cadastro.html')
 
 @pages_bp.route("/painel-morador")
-@token_required
 def painel_morador():
     # As informações do usuário autenticado estarão em request.user
     return render_template("painelMorador.html")
 
 @pages_bp.route("/painel-gestor")
-@token_required
 def painel_gestor():
     # As informações do usuário autenticado estarão em request.user
     return render_template("painelGestor.html")

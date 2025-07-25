@@ -74,12 +74,14 @@
                 });
                 
                 const data = await response.json();
-                
-                if (data.success) {
+                               if (data.success) {
+                    localStorage.setItem("jwt_token", data.token);
                     if (data.user.is_gestor) {
-                        window.location.href = '/painel-gestor';
+                        window.location.href = 
+'/painel-gestor';
                     } else {
-                        window.location.href = '/painel-morador';
+                        window.location.href = 
+'/painel-morador';
                     }
                 } else {
                     document.getElementById('mensagem-erro').textContent = data.message;

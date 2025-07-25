@@ -3,7 +3,7 @@ import jwt
 from functools import wraps
 
 # A chave secreta deve ser a mesma usada para assinar o token no auth.py
-SECRET_KEY = 'd2ccd1731dc1cc9e3352a9db9698cc4ba'
+SECRET_KEY = 'd2ccd1731dc1cca262d6c889e3352a921f973db9698cc4ba'
 
 def token_required(f):
     @wraps(f)
