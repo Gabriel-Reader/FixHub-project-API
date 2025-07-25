@@ -84,7 +84,6 @@ def cadastro():
 
 @auth_bp.route("/logout", methods=["POST"])
 def logout():
-    # Com JWT, o logout é geralmente tratado no lado do cliente (descartando o token).
     # Se uma lista negra de tokens for implementada, a lógica seria adicionada aqui.
     return jsonify({'success': True, 'message': 'Sessão encerrada no cliente.'})
 

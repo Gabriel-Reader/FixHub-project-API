@@ -1,17 +1,5 @@
-blinker
-click
-dnspython
 email_validator
 Flask
 flask-cors
-Flask-SQLAlchemy
-greenlet
-idna
-itsdangerous
-Jinja2
-MarkupSafe
 psycopg2-binary
-SQLAlchemy
-typing_extensions
-Werkzeug
 jwt
