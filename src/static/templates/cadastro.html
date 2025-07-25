@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tela de Cadastro" />
+    <link rel="stylesheet" href="/static/css/cadastro.css">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
+    <title>Página de Cadastro</title>
+</head>
+
+<body>
+    <div class="cadastro-container">
+        <div class="cartao-cadastro">
+
+            <div class="cabecalho-cartao">
+                <h1>Criar conta</h1>
+                <p>Preencha os campos abaixo para se cadastrar</p>
+            </div>
+            
+            <div id="mensagens-container" style="display: none;">
+                <ul id="lista-mensagens">
+                </ul>
+            </div>
+
+            <form id="formCadastro" class="formulario-cadastro" autocomplete="off">
+
+                <div class="item-formulario">
+                    <label for="c_usuario">Nome de usuário</label>
+                    <input type="text" id="c_usuario" name="c_usuario" placeholder="ex: JoaoSilva25" required>
+                </div>
+
+                <div class="item-formulario">
+                    <label for="c_email">E-mail</label>
+                    <input type="email" id="c_email" name="c_email" placeholder="seu-email@gmail.com" required>
+                </div>
+
+                <div class="item-formulario">
+                    <label for="c_senha">Senha</label>
+                    <input type="password" id="c_senha" name="c_senha" placeholder="••••••••" required>
+                </div>
+
+                <div class="itens-linha">
+
+                    <div class="item-formulario">
+                        <label for="c_quarto">Quarto</label>
+                        <input type="number" id="c_quarto" name="c_quarto" placeholder="ex: 102" required>
+                    </div>
+                    
+
+                    <div class="item-formulario">
+                        <label for="c_casa">Casa (CEU)</label>
+                        <select id="c_casa" name="c_casa" required>
+                            <option value="" disabled selected>Selecione a casa...</option>
+                            <option value="1">CEU 1</option>
+                            <option value="2">CEU 2</option>
+                            <option value="3">CEU 3</option>
+                            <option value="4">CEU 4</option>
+                            <option value="126">CEU 126</option>
+                            <option value="145">CEU 145</option>
+                            <option value="Hotel">CEU Hotel</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn-criarConta" id="c_criarConta">
+                    Criar conta
+                </button>
+
+            </form>
+
+            <a href="/" class="link-login">Já tem uma conta? Faça login</a>
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('formCadastro').addEventListener('submit', async function(e) {
+            e.preventDefault(); // impedir que o formulário seja enviado da maneira tradicional (com um recarregamento de página)
+            
+            const usuario = document.getElementById('c_usuario').value;
+            const email = document.getElementById('c_email').value;
+            const senha = document.getElementById('c_senha').value;
+            const quarto = document.getElementById('c_quarto').value;
+            const casa = document.getElementById('c_casa').value;
+            
+            try {
+                const response = await fetch('/api/auth/cadastro', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        usuario: usuario,
+                        email: email,
+                        senha: senha,
+                        quarto: quarto,
+                        casa: casa
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Usuário cadastrado com sucesso!');
+                    window.location.href = '/';
+                } else {
+                    const listaMensagens = document.getElementById('lista-mensagens');
+                    listaMensagens.innerHTML = '';
+                    
+                    data.errors.forEach(error => {
+                        const li = document.createElement('li');
+                        li.className = 'mensagem-validacao';
+                        li.textContent = error;
+                        listaMensagens.appendChild(li);
+                    });
+                    
+                    document.getElementById('mensagens-container').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Erro ao cadastrar usuário. Tente novamente.');
+            }
+        });
+    </script>
+
+</body>
+
+</html>
