@@ -85,7 +85,11 @@
         // Verificar sessão ao carregar a página
         async function verificarSessao() {
             try {
-                const response = await fetch('/api/auth/check-session');
+                const response = await fetch("/api/auth/check-session", {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwt_token")}`
+                    }
+                });
                 const data = await response.json();
                 
                 if (!data.authenticated || !data.user.is_gestor) {
@@ -111,7 +115,11 @@
                 const filtros = obterFiltros();
                 const queryParams = new URLSearchParams(filtros).toString();
                 
-                const response = await fetch(`/api/pedidos/gestor?${queryParams}`);
+                const response = await fetch(`/api/pedidos/gestor?${queryParams}`, {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("jwt_token")}`
+                    }
+                });
                 const data = await response.json();
                 
                 if (data.success) {
@@ -287,7 +295,8 @@
                 const response = await fetch('/api/pedidos/atualizar', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${localStorage.getItem("jwt_token")}`
                     },
                     body: JSON.stringify(dados)
                 });
@@ -329,6 +338,20 @@
             } catch (error) {
                 console.error('Erro ao fazer logout:', error);
                 window.location.href = '/';
+            }
+        });
+
+        // Logout
+        document.getElementById("logout-link").addEventListener("click", async function(e) {
+            e.preventDefault();
+            
+            try {
+                await fetch("/api/auth/logout", { method: "POST" });
+                localStorage.removeItem("jwt_token"); // <-- Linha adicionada
+                window.location.href = "/";
+            } catch (error) {
+                console.error("Erro ao fazer logout:", error);
+                window.location.href = "/";
             }
         });
 

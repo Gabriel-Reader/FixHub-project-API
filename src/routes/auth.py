@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 auth_bp = Blueprint("auth", __name__)
 
 # Chave secreta para assinar e verificar os tokens JWT
-SECRET_KEY = 'd2ccd1731dc1cc9e3352a9db9698cc4ba'
+SECRET_KEY = 'd2ccd1731dc1cca262d6c889e3352a921f973db9698cc4ba'
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
